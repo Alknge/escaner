@@ -2,79 +2,82 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Lector de Mano Externo Completo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Librerías profesionales de iconos y el motor óptico nativo de cámara -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Escáner de Bodega Móvil</title>
+  <!-- Iconos e Fuentes -->
   <link rel="stylesheet" href="https://cloudflare.com">
-  <script src="https://unpkg.com" type="text/javascript"></script>
   
   <style>
-    /* =========================================================================
-       ESTILOS FONDOS Y EFECTO DE VIDRIO (GLASSMORPHISM) JUVENIL
-       ========================================================================= */
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body {
-      background: linear-gradient(135deg, #0d0a1b 0%, #120e24 50%, #050308 100%);
-      color: #ffffff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 12px;
-    }
-    .cristal {
-      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-    }
+      
+      /* =========================================================================
+   ESTILOS FONDOS Y EFECTO DE VIDRIO (GLASSMORPHISM) JUVENIL
+   ========================================================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+body {
+  background: linear-gradient(135deg, #0d0a1b 0%, #120e24 50%, #050308 100%);
+  color: #ffffff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 12px;
+}
+.cristal {
+  background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 16px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
 
-    /* PANTALLA CRISTALIZADA DE BLOQUEO POR PIN */
-    #pantalla-bloqueo {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 2, 8, 0.9);
-      backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 9999; display: flex; justify-content: center; align-items: center;
-    }
-    .contenedor-pin { width: 100%; max-width: 300px; padding: 25px; text-align: center; }
-    .pantalla-codigo {
-      width: 100%; height: 48px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 10px; font-size: 1.6rem; letter-spacing: 6px; text-align: center; color: #fff; margin-bottom: 20px;
-    }
-    .teclado-numerico { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .btn-teclado {
-      height: 56px; font-size: 1.3rem; font-weight: bold; color: white; background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
+/* PANTALLA CRISTALIZADA DE BLOQUEO POR PIN */
+#pantalla-bloqueo {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 2, 8, 0.9);
+  backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 9999; display: flex; justify-content: center; align-items: center;
+}
+.contenedor-pin { width: 100%; max-width: 300px; padding: 25px; text-align: center; }
+.pantalla-codigo {
+  width: 100%; height: 48px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px; font-size: 1.6rem; letter-spacing: 6px; text-align: center; color: #fff; margin-bottom: 20px;
+}
+.teclado-numerico { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.btn-teclado {
+  height: 56px; font-size: 1.3rem; font-weight: bold; color: white; background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
 
-    /* INTERFAZ PRINCIPAL DEL ESCÁNER MÓVIL */
-    #interfaz-sistema { width: 100%; max-width: 460px; display: none; flex-direction: column; gap: 15px; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; }
-    .titulo-negocio { font-size: 1.2rem; font-weight: 800; color: #fff; }
-    .monitores-estado { display: flex; gap: 12px; align-items: center; }
-    .indicador-led { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #b3b0cb; }
-    .led { width: 10px; height: 10px; border-radius: 50%; background-color: #ff453a; box-shadow: 0 0 6px #ff453a; }
-    .led.activo { background-color: #34c759; box-shadow: 0 0 8px #34c759; }
-    
-    /* Visor estático aislado para la cámara trasera */
-    .contenedor-camara-fijo {
-      width: 100%; background: #000; border-radius: 16px; overflow: hidden;
-      border: 2px solid rgba(99, 102, 241, 0.3); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-    }
-    #visor-camara { width: 100%; min-height: 250px; background: #000; }
-    
-    .panel-confirmacion { padding: 15px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
-    .panel-confirmacion h3 { font-size: 1.2rem; color: #ffd60a; }
-    .panel-confirmacion p { font-size: 0.9rem; color: #b3b0cb; }
-    
-    .control-multiplicador { display: flex; align-items: center; justify-content: space-between; padding: 12px; }
-    .input-cant { width: 80px; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; text-align: center; font-size: 1rem; font-weight: bold; }
-    
-    .btn-accion-movil {
-      width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; color: #fff; border: none; border-radius: 12px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;
-    }
-    .btn-reiniciar { background: linear-gradient(135deg, #ff453a 0%, #c62828 100%); }
-    .btn-manual { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); margin-top: 10px; }
+/* INTERFAZ PRINCIPAL DEL ESCÁNER MÓVIL */
+#interfaz-sistema { width: 100%; max-width: 460px; display: none; flex-direction: column; gap: 15px; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; }
+.titulo-negocio { font-size: 1.2rem; font-weight: 800; color: #fff; }
+.monitores-estado { display: flex; gap: 12px; align-items: center; }
+.indicador-led { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #b3b0cb; }
+.led { width: 10px; height: 10px; border-radius: 50%; background-color: #ff453a; box-shadow: 0 0 6px #ff453a; }
+.led.activo { background-color: #34c759; box-shadow: 0 0 8px #34c759; }
+
+/* MONITOR FIJO PROFESIONAL COMERCIAL */
+.contenedor-camara-fijo {
+  width: 100%; height: 260px; background: #000; border-radius: 16px; overflow: hidden;
+  border: 2px solid rgba(99, 102, 241, 0.3); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); position: relative;
+}
+#visor-nativo { width: 100%; height: 100%; display: block; object-fit: cover; background: #000; }
+
+.panel-confirmacion { padding: 15px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.panel-confirmacion h3 { font-size: 1.2rem; color: #ffd60a; }
+.panel-confirmacion p { font-size: 0.9rem; color: #b3b0cb; }
+
+.control-multiplicador { display: flex; align-items: center; justify-content: space-between; padding: 12px; }
+.input-cant { width: 80px; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; text-align: center; font-size: 1rem; font-weight: bold; }
+
+.btn-accion-movil {
+  width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; color: #fff; border: none; border-radius: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;
+}
+.btn-reiniciar { background: linear-gradient(135deg, #ff453a 0%, #c62828 100%); }
+.btn-manual { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); margin-top: 10px; }
+
+      
   </style>
+  
 </head>
 <body>
 
-  <!-- PANTALLA DE ACCESO -->
+  <!-- PANTALLA DE ACCESO POR PIN -->
   <div id="pantalla-bloqueo">
     <div class="contenedor-pin cristal">
-      <h2>LECTOR DE MANO EXTERNO</h2>
+      <h2>LECTOR DE DATA REAL</h2>
       <input type="password" id="campo-pin" class="pantalla-codigo" readonly placeholder="••••••">
       <div class="teclado-numerico">
         <button class="btn-teclado" onclick="añadirDigito('1')">1</button>
@@ -96,7 +99,7 @@
   <!-- INTERFAZ OPERATIVA -->
   <div id="interfaz-sistema">
     <header class="cristal">
-      <div class="titulo-negocio"><i class="fa-solid fa-barcode"></i> ESCÁNER DIGITAL</div>
+      <div class="titulo-negocio"><i class="fa-solid fa-wifi"></i> CANAL ACTIVO</div>
       <div class="monitores-estado">
         <div class="indicador-led"><div id="led-red" class="led activo"></div> API</div>
         <div class="indicador-led"><div id="led-cam" class="led"></div> Lente</div>
@@ -104,222 +107,335 @@
     </header>
 
     <div class="contenedor-camara-fijo">
-      <div id="visor-camara"></div>
+      <video id="visor-nativo" autoplay playsinline></video>
     </div>
 
     <div class="control-multiplicador cristal">
-      <span style="font-size:0.9rem; color:#b3b0cb;"><i class="fa-solid fa-layer-group"></i> Multiplicar:</span>
+      <span><i class="fa-solid fa-layer-group"></i> Multiplicar:</span>
       <input type="number" id="cant-multiplicador" class="input-cant" value="1" min="1">
     </div>
 
     <div class="panel-confirmacion cristal">
-      <h3 id="txt-prod">Visor Inicializado</h3>
-      <p id="txt-cod">Listo para procesar artículos</p>
+      <h3 id="txt-prod">Buscando códigos...</h3>
+      <div id="txt-monto" style="font-size: 1.6rem; font-weight: bold; color: #34c759; margin: 4px 0; text-shadow: 0 0 10px rgba(52,199,89,0.2);">---</div>
+      <p id="txt-cod">Muestre la barra al lente trasero</p>
     </div>
 
-    <button class="btn-accion-movil btn-reiniciar" onclick="forzarReinicioCamara()"><i class="fa-solid fa-camera-rotate"></i> Resetear Lente</button>
+    <button class="btn-accion-movil btn-reiniciar" onclick="forzarReinicioLenteNativo()"><i class="fa-solid fa-camera-rotate"></i> Resetear Lente</button>
     
-    <!-- Botón switch para la linterna del celular -->
-    <button class="btn-accion-movil" id="btn-lampara" style="background: linear-gradient(135deg, #ffd60a 0%, #ffb703 100%); color: #000; margin-top: 10px;" onclick="alternarLamparaCelular()">
+    <button class="btn-accion-movil" id="btn-lampara" style="background: linear-gradient(135deg, #ffd60a 0%, #ffb703 100%); color: #000; margin-top: 10px;" onclick="alternarLamparaNativa()">
       <i class="fa-solid fa-lightbulb"></i> Encender Lámpara (Poca Luz)
     </button>
 
     <button class="btn-accion-movil btn-manual" onclick="ingresoCodigoManual()"><i class="fa-solid fa-keyboard"></i> Código Manual</button>
   </div>
 
-  <script>
-    // =========================================================================
-    // LÓGICA DE CONTROL MAESTRO DE ACCESO, PERMISOS Y COMUNICACIÓN EXTERNA
-    // =========================================================================
-    
-    // Inserte aquí de forma interna la URL generada por su Apps Script externo:
-    const URL_APPS_SCRIPT = "PEGA_AQUÍ_TU_URL_DE_WEB_APP";
-
-    let pinIntroducido = "";
-    const campoPin = document.getElementById("campo-pin");
-    let html5QrcodeScanner = null;
-    let pistaVideoLente = null; 
-    let lamparaEncendida = false;
-
-    function añadirDigito(num) {
-      if (pinIntroducido.length < 6) { 
-        pinIntroducido += num; 
-        campoPin.value = "•".repeat(pinIntroducido.length); 
-        reproducirVoz(num); 
-      }
-    }
-    
-    function limpiarPin() { 
-      pinIntroducido = ""; 
-      campoPin.value = ""; 
-    }
-    
-    function verificarPin() {
-      if (pinIntroducido === "123456") {
-        document.getElementById("pantalla-bloqueo").style.display = "none";
-        document.getElementById("interfaz-sistema").style.display = "flex";
-        reproducirVoz("Aplicación conectada a internet. Lector listo.");
-        mantenerPantallaSiempreActiva();
-        
-        // Petición de permisos aislada y forzada al hardware
-        setTimeout(() => {
-          encenderVisorCamaraNativo();
-        }, 300);
-      } else { 
-        reproducirVoz("Código incorrecto"); 
-        limpiarPin(); 
-      }
-    }
-
-    function reproducirVoz(msg) {
-      if ('speechSynthesis' in window) { 
-        window.speechSynthesis.cancel(); 
-        const u = new SpeechSynthesisUtterance(msg); 
-        u.lang = 'es-ES'; 
-        window.speechSynthesis.speak(u); 
-      }
-    }
-
-    // MANEJO DE ESTADOS DE RED POR VOZ
-    window.addEventListener('online', () => { 
-      document.getElementById("led-red").classList.add("activo"); 
-      reproducirVoz("Aplicación conectada a internet"); 
-    });
-    window.addEventListener('offline', () => { 
-      document.getElementById("led-red").classList.remove("activo"); 
-      reproducirVoz("Aplicación no conectado sin internet"); 
-    });
-
-    async function mantenerPantallaAlwaysActiva() {
-      if ('wakeLock' in navigator) { 
-        try { await navigator.wakeLock.request('screen'); } catch (e) {} 
-      }
-    }
-
-    // SOLICITA PERMISOS EXPLÍCITOS AL CELULAR Y ENCIENDE EL VISOR
-    function encenderVisorCamaraNativo() {
-      document.getElementById("led-cam").classList.remove("activo");
+  <!-- VENTANA FLOTANTE DE REGISTRO RÁPIDO DE ARTÍCULOS -->
+  <div id="modal-registro-rapido" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 2, 8, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 10000; justify-content: center; align-items: center; padding: 20px;">
+    <div class="cristal" style="width: 100%; max-width: 360px; padding: 25px; display: flex; flex-direction: column; gap: 15px;">
+      <h3 style="color: #ffd60a; text-align: center;"><i class="fa-solid fa-box-open"></i> Producto Nuevo</h3>
+      <p style="font-size: 0.85rem; color: #b3b0cb; text-align: center;">El código no existe en la bodega. Regístralo rápidamente aquí:</p>
       
-      // FORZAR PERMISOS NATIVOS: Le pide permiso directo al sistema operativo del teléfono móvil
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then((streamDatos) => {
-        // Al obtener el permiso, guardamos de forma temporal la pista para la linterna
-        pistaVideoLente = streamDatos.getVideoTracks()[0];
-        streamDatos.getTracks().forEach(track => track.stop()); // Apagamos el stream de prueba
+      <div>
+        <label style="font-size: 0.8rem; color: #a5a1ff; display: block; margin-bottom: 4px;">Código de Barras:</label>
+        <input type="text" id="reg-codigo" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-weight: bold;" readonly>
+      </div>
 
-        // Inicialización limpia del hardware de lectura de barras
-        html5QrcodeScanner = new Html5Qrcode("visor-camara");
-        
-        return html5QrcodeScanner.start(
-          { facingMode: "environment" },
-          { fps: 25, qrbox: { width: 280, height: 160 } },
-          (codigoBarras) => {
-            reproducirVoz("Leído");
-            dispararTransmisionUrl(codigoBarras);
-          },
-          (errorEnfoque) => { /* Captura estática continua */ }
-        );
-      })
-      .then(() => {
-        document.getElementById("led-cam").classList.add("activo");
-        console.log("Visor óptico y permisos forzados activos.");
-        
-        // Capturar la pista en vivo que está usando el escáner para poder prender el flash
-        setTimeout(() => {
-          if (html5QrcodeScanner) {
-            const elementoVideo = document.querySelector("#visor-camara video");
-            if (elementoVideo && elementoVideo.srcObject) {
-              pistaVideoLente = elementoVideo.srcObject.getVideoTracks()[0];
-            }
-          }
-        }, 1000);
-      })
-      .catch(err => {
-        console.error("Error de permisos o hardware:", err);
-        reproducirVoz("Permiso de cámara denegado o visor bloqueado");
-        alert("POR FAVOR, PERMITA EL ACCESO A LA CÁMARA EN SU NAVEGADOR PARA PODER ESCANEAR");
-      });
+      <div>
+        <label style="font-size: 0.8rem; color: #a5a1ff; display: block; margin-bottom: 4px;">Nombre del Artículo:</label>
+        <input type="text" id="reg-nombre" placeholder="Ej. Harina Pan 1Kg" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;">
+      </div>
+
+      <div>
+        <label style="font-size: 0.8rem; color: #a5a1ff; display: block; margin-bottom: 4px;">Precio Base ($):</label>
+        <input type="number" id="reg-precio" placeholder="0.00" step="0.01" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;">
+      </div>
+
+      <button class="btn-accion-movil" style="background: linear-gradient(135deg, #34c759 0%, #28a745 100%); margin-top: 10px;" onclick="ejecutarGuardadoAutomaticoBodega()">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Guardar y Vender
+      </button>
+      
+      <button class="btn-accion-movil" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff;" onclick="cerrarFormularioRegistro()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+<script>
+   
+    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzE99YUyPWmusBlsznIau0GMyjIbXATw1FrJLglxR1O8zWEILES-uRHy6dy6Qvt13Djsw/exec";
+
+let pinIntroducido = "";
+const campoPin = document.getElementById("campo-pin");
+let streamVideoActivo = null;
+let pistaVideoLente = null; 
+let lamparaEncendida = false;
+let detectorDeBarras = null;
+let bucleEscaneoActivo = null;
+let bloqueoUnMilisegundo = false;
+
+function añadirDigito(num) {
+  if (pinIntroducido.length < 6) { 
+    pinIntroducido += num; 
+    campoPin.value = "•".repeat(pinIntroducido.length); 
+    reproducirVoz(num); 
+  }
+}
+
+function limpiarPin() { 
+  pinIntroducido = ""; 
+  campoPin.value = ""; 
+  reproducirVoz("Limpiado");
+}
+
+function verificarPin() {
+  if (pinIntroducido === "123456") {
+    document.getElementById("pantalla-bloqueo").style.display = "none";
+    document.getElementById("interfaz-sistema").style.display = "flex";
+    reproducirVoz("Lector activo.");
+    mantenerPantallaSiempreActiva();
+    encenderCamaraInternaPura();
+  } else { 
+    reproducirVoz("Código de acceso incorrecto"); 
+    limpiarPin(); 
+  }
+}
+
+function reproducirVoz(msg) {
+  if ('speechSynthesis' in window) { 
+    window.speechSynthesis.cancel(); 
+    const u = new SpeechSynthesisUtterance(msg); 
+    u.lang = 'es-ES'; 
+    window.speechSynthesis.speak(u); 
+  }
+}
+
+window.addEventListener('online', () => { 
+  document.getElementById("led-red").classList.add("activo"); 
+  reproducirVoz("Aplicación conectada a internet"); 
+});
+window.addEventListener('offline', () => { 
+  document.getElementById("led-red").classList.remove("activo"); 
+  reproducirVoz("Aplicación no conectado sin internet"); 
+});
+
+async function mantenerPantallaSiempreActiva() {
+  if ('wakeLock' in navigator) { 
+    try { await navigator.wakeLock.request('screen'); } catch (e) {} 
+  }
+}
+
+function encenderCamaraInternaPura() {
+  document.getElementById("led-cam").classList.remove("activo");
+  
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+  .then((stream) => {
+    streamVideoActivo = stream;
+    const tracks = stream.getVideoTracks();
+    if (tracks.length > 0) {
+      pistaVideoLente = tracks[0]; 
     }
+    
+    const videoElemento = document.getElementById("visor-nativo");
+    videoElemento.srcObject = stream;
+    
+    document.getElementById("led-cam").classList.add("activo");
+    reproducirVoz("Visor encendido");
+    activarProcesamientoAutomaticoInterno(videoElemento);
+  })
+  .catch((err) => {
+    console.error(err);
+    reproducirVoz("Acceso bloqueado");
+    alert("POR FAVOR, OTORUE EL PERMISO DE CÁMARA EN SU NAVEGADOR");
+  });
+}
 
-    // SWITCH PARA ENCENDER / APAGAR LA LÁMPARA EN LA OSCURIDAD
-    function alternarLamparaCelular() {
-      if (!pistaVideoLente) {
-        reproducirVoz("Lente no inicializado");
-        return;
-      }
-
+function activarProcesamientoAutomaticoInterno(elementoVideo) {
+  if ('BarcodeDetector' in window) {
+    detectorDeBarras = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'code_128', 'code_39'] });
+    
+    bucleEscaneoActivo = setInterval(async () => {
+      if (bloqueoUnMilisegundo) return;
+      
       try {
-        const capacidades = pistaVideoLente.getCapabilities();
-        
-        if (!capacidades.torch) {
-          reproducirVoz("Lámpara no disponible en este dispositivo");
-          alert("Este celular o navegador no permite controlar la linterna.");
-          return;
+        const codigosEncontrados = await detectorDeBarras.detect(elementoVideo);
+        if (codigosEncontrados.length > 0) {
+          bloqueoUnMilisegundo = true;
+          const codigoBarras = codigosEncontrados[0].rawValue; 
+          reproducirVoz("Leído");
+          dispararTransmisionUrl(codigoBarras);
+          
+          setTimeout(() => { bloqueoUnMilisegundo = false; }, 3500);
         }
+      } catch (e) { console.log("Buscando..."); }
+    }, 300);
+  } else {
+    document.getElementById("txt-prod").innerText = "Modo manual activo";
+    document.getElementById("txt-cod").innerText = "Tu celular requiere Código Manual.";
+    reproducirVoz("Lector automático no compatible, use entrada manual.");
+  }
+}
 
-        lamparaEncendida = !lamparaEncendida;
-        
-        pistaVideoLente.applyConstraints({
-          advanced: [{ torch: lamparaEncendida }]
-        })
-        .then(() => {
-          const btnLampara = document.getElementById("btn-lampara");
-          if (lamparaEncendida) {
-            btnLampara.innerHTML = '<i class="fa-solid fa-lightbulb-slash"></i> Apagar Lámpara';
-            reproducirVoz("Lámpara encendida");
-          } else {
-            btnLampara.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Encender Lámpara (Poca Luz)';
-            reproducirVoz("Lámpara apagada");
-          }
-        })
-        .catch(e => console.error("Error al aplicar luz:", e));
-      } catch (err) {
-        reproducirVoz("No compatible");
-      }
+function alternarLamparaNativa() {
+  if (!pistaVideoLente) { 
+    reproducirVoz("Lente apagado"); 
+    return; 
+  }
+  try {
+    const capacidades = pistaVideoLente.getCapabilities();
+    if (!capacidades.torch) { 
+      reproducirVoz("Lámpara no disponible"); 
+      alert("Este dispositivo o navegador no da acceso a la linterna.");
+      return; 
     }
+    
+    lamparaEncendida = !lamparaEncendida;
+    pistaVideoLente.applyConstraints({ advanced: [{ torch: lamparaEncendida }] })
+    .then(() => {
+      const btn = document.getElementById("btn-lampara");
+      btn.innerHTML = lamparaEncendida ? '<i class="fa-solid fa-lightbulb-slash"></i> Apagar Lámpara' : '<i class="fa-solid fa-lightbulb"></i> Encender Lámpara (Poca Luz)';
+      reproducirVoz(lamparaEncendida ? "Lámpara encendida" : "Lámpara apagada");
+    }).catch(e => console.error(e));
+  } catch (err) { 
+    reproducirVoz("No compatible"); 
+  }
+}
 
-    // TRANSMISIÓN DE DATOS HACIA EL SERVIDOR WEB EXTERNO
-    function dispararTransmisionUrl(codigo) {
-      const cantidad = parseInt(document.getElementById("cant-multiplicador").value) || 1;
-      
-      document.getElementById("txt-prod").innerText = "Transmitiendo...";
-      document.getElementById("txt-cod").innerText = `Código: ${codigo}`;
-
-      if (!navigator.onLine) {
-        reproducirVoz("Guardado local sin conexión");
-        document.getElementById("txt-prod").innerText = "Guardado localmente (Offline)";
-        document.getElementById("cant-multiplicador").value = "1";
-        return;
-      }
-
-      fetch(URL_APPS_SCRIPT, {
-        method: "POST",
-        mode: "no-cors", 
-        body: JSON.stringify({ accion: "registrarEscaneoDesdeCelular", codigo: codigo, cantidad: cantidad })
-      })
-      .then(() => {
-        document.getElementById("txt-prod").innerText = "Transmitido a Monitor";
-        document.getElementById("txt-cod").innerText = `Código: ${codigo} (x${cantidad})`;
-        document.getElementById("cant-multiplicador").value = "1";
-        reproducirVoz("Transmitido");
-      })
-      .catch(e => {
-        document.getElementById("txt-prod").innerText = "Error en el canal de datos";
-      });
+function iniciarTemporizadorLimpiezaAutomatica() {
+  setTimeout(() => {
+    if (!bloqueoUnMilisegundo) {
+      document.getElementById("txt-prod").innerText = "Buscando códigos...";
+      document.getElementById("txt-monto").innerText = "---";
+      document.getElementById("txt-cod").innerText = "Muestre la barra al lente trasero";
     }
+  }, 6000);
+}
 
-    function forzarReinicioCamara() {
-      reproducirVoz("Reiniciando lente");
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => { encenderVisorCamaraNativo(); }).catch(() => { encenderVisorCamaraNativo(); });
-      } else { encenderVisorCamaraNativo(); }
-    }
+function dispararTransmisionUrl(codigo) {
+  const cantidad = parseInt(document.getElementById("cant-multiplicador").value) || 1;
+  document.getElementById("txt-prod").innerText = "Transmitiendo...";
+  document.getElementById("txt-monto").innerText = "---";
+  document.getElementById("txt-cod").innerText = `Código: ${codigo}`;
 
-    function ingresoCodigoManual() {
-      reproducirVoz("Entrada manual");
-      const cod = prompt("Ingrese el código o prefijo simulado (ej. 99001):");
-      if (cod) dispararTransmisionUrl(cod);
+  if (!navigator.onLine) {
+    reproducirVoz("Sin conexión a internet");
+    document.getElementById("txt-prod").innerText = "Error: Desconectado";
+    return;
+  }
+
+  const paqueteEnvio = { 
+    accion: "registrarEscaneoDesdeCelular", 
+    codigo: codigo, 
+    cantidad: cantidad 
+  };
+
+  fetch(URL_APPS_SCRIPT, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(paqueteEnvio)
+  })
+  .then(response => {
+    if (!response.ok) throw new Error("Error en servidor");
+    return response.json();
+  })
+  .then(data => {
+    if (data.status === "MANTENIMIENTO") {
+      document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>MANTENIMIENTO</h1>";
+    } else if (data.status === "transmitido") {
+      document.getElementById("txt-prod").innerText = data.nombre;
+      document.getElementById("txt-monto").innerText = `$${parseFloat(data.precio * cantidad).toFixed(2)}`;
+      document.getElementById("txt-cod").innerText = `Código: ${codigo} (x${cantidad})`;
+      document.getElementById("cant-multiplicador").value = "1";
+      reproducirVoz("Transmitido con éxito");
+      iniciarTemporizadorLimpiezaAutomatica();
+    } else if (data.status === "solicitar_registro") {
+      reproducirVoz("Producto no registrado. Ingrese los datos.");
+      document.getElementById("reg-codigo").value = data.codigo;
+      document.getElementById("reg-nombre").value = "";
+      document.getElementById("reg-precio").value = "";
+      document.getElementById("modal-registro-rapido").style.display = "flex";
     }
-  </script>
+  })
+  .catch(e => { 
+    document.getElementById("txt-prod").innerText = "Error de Transmisión";
+    document.getElementById("txt-monto").innerText = "---";
+    reproducirVoz("Falla de conexión");
+  });
+}
+
+function ejecutarGuardadoAutomaticoBodega() {
+  const codigo = document.getElementById("reg-codigo").value;
+  const nombre = document.getElementById("reg-nombre").value.trim();
+  const precio = parseFloat(document.getElementById("reg-precio").value) || 0;
+  const cantidad = parseInt(document.getElementById("cant-multiplicador").value) || 1;
+
+  if (nombre === "" || precio <= 0) {
+    alert("Por favor ingrese un nombre válido y un precio mayor a cero.");
+    return;
+  }
+
+  const paqueteRegistro = {
+    accion: "guardarNuevoProducto",
+    codigo: codigo,
+    nombre: nombre,
+    precio: precio,
+    cantidad: cantidad
+  };
+
+  document.getElementById("modal-registro-rapido").style.display = "none";
+  document.getElementById("txt-prod").innerText = "Guardando e inventariando...";
+
+  fetch(URL_APPS_SCRIPT, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(paqueteRegistro)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === "creado_y_transmitido") {
+      document.getElementById("txt-prod").innerText = data.nombre;
+      document.getElementById("txt-monto").innerText = `$${parseFloat(data.precio * cantidad).toFixed(2)}`;
+      document.getElementById("txt-cod").innerText = `Código: ${codigo} (x${cantidad})`;
+      document.getElementById("cant-multiplicador").value = "1";
+      reproducirVoz("Registrado y vendido con éxito");
+      iniciarTemporizadorLimpiezaAutomatica();
+    }
+  })
+  .catch(e => {
+    reproducirVoz("Error al guardar");
+    document.getElementById("txt-prod").innerText = "Error al inventariar";
+  });
+}
+
+function cerrarFormularioRegistro() {
+  document.getElementById("modal-registro-rapido").style.display = "none";
+  document.getElementById("txt-prod").innerText = "Buscando códigos...";
+}
+
+function forzarReinicioLenteNativo() {
+  reproducirVoz("Pantalla restaurada");
+  
+  document.getElementById("txt-prod").innerText = "Buscando códigos...";
+  document.getElementById("txt-monto").innerText = "---";
+  document.getElementById("txt-cod").innerText = "Muestre la barra al lente trasero";
+  document.getElementById("cant-multiplicador").value = "1";
+
+  if (bucleEscaneoActivo) clearInterval(bucleEscaneoActivo);
+  if (streamVideoActivo) { 
+    streamVideoActivo.getTracks().forEach(track => track.stop()); 
+  }
+  encenderCamaraInternaPura();
+}
+
+function ingresoCodigoManual() {
+  reproducirVoz("Entrada manual");
+  const cod = prompt("Ingrese el código o prefijo numérico (ej. 99001):");
+  if (cod && cod.trim() !== "") {
+    dispararTransmisionUrl(cod.trim());
+  }
+}
+
+    
+</script>
 </body>
 </html>
